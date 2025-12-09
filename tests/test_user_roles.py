@@ -1,23 +1,22 @@
 # tests/test_user_roles.py
 from fastapi.testclient import TestClient
 
+def test_init_and_get_roles(client: TestClient):
+    # тепер user_id у нас int, а не довільний string
+    user_id = 123
 
-def test_add_and_get_roles(client: TestClient):
-    user_id = "test-user-1"
+    # 1. Ініціалізуємо роль користувача (має стати 'soldier')
+    resp_init = client.post(f"/api/rbac/users/{user_id}/role/init")
+    assert resp_init.status_code == 200
 
-    # добавляем роль
-    resp = client.post(
-        f"/api/rbac/users/{user_id}/roles",
-        json={"role_name": "admin"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["user_id"] == user_id
-    assert "admin" in data["roles"]
+    data_init = resp_init.json()
+    assert data_init["user_id"] == user_id
+    assert data_init["roles"] == ["soldier"]
 
-    # получаем роли
-    resp2 = client.get(f"/api/rbac/users/{user_id}/roles")
-    assert resp2.status_code == 200
-    data2 = resp2.json()
-    assert data2["user_id"] == user_id
-    assert "admin" in data2["roles"]
+    # 2. Перевіряємо через GET, що роль зчитується коректно
+    resp_get = client.get(f"/api/rbac/users/{user_id}/roles")
+    assert resp_get.status_code == 200
+
+    data_get = resp_get.json()
+    assert data_get["user_id"] == user_id
+    assert data_get["roles"] == ["soldier"]

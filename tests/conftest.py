@@ -1,36 +1,34 @@
-# tests/conftest.py
 import os
 import pathlib
 
 import pytest
 from fastapi.testclient import TestClient
 
-# Путь до тестовой БД (файловая SQLite)
+# Шлях до тестової БД (файлова SQLite)
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 TEST_DB_PATH = BASE_DIR / "test_rbac.db"
 
-# Подменяем DB_URL ДО импорта app.db / app.main
+# Підміняємо DB_URL ДО імпорту app.db / app.main
 os.environ["DB_URL"] = f"sqlite:///{TEST_DB_PATH}"
 
-from app.db import Base, engine, SessionLocal, get_db  # noqa: E402
-from app.main import app                               # noqa: E402
-from app import models                                 # noqa: F401,E402  # чтобы Role/UserRole попали в Base.metadata
+from app.db import Base, engine, SessionLocal, get_db, init_db  # noqa: E402
+from app.main import app                                       # noqa: E402
+from app import models                                         # noqa: F401,E402  # щоб Role/UserRole зареєструвались
+from app.services import get_claims                            # noqa: E402
 
 
 def _reset_database():
     """
-    Перед каждым тестом полностью пересоздаём схему.
+    Перед кожним тестом:
+      1) дропаєм усі таблиці
+      2) викликаємо init_db(), який і створює схему, і сідає дефолтні ролі
     """
     Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    init_db()
 
 
 @pytest.fixture(autouse=True)
 def setup_database():
-    """
-    Автоматически выполняется перед каждым тестом:
-      - дропает и пересоздаёт таблицы.
-    """
     _reset_database()
     yield
 
@@ -43,13 +41,21 @@ def override_get_db():
         db.close()
 
 
-# Подменяем зависимость БД в FastAPI
+def override_get_claims():
+    """
+    У тестах не ганяємо реальний JWT/JWKS.
+    Просто вважаємо, що до нас прийшов токен:
+      sub = "1"
+      role = "boss"
+    """
+    return {"sub": "1", "role": "boss"}
+
+
+# Підміняємо залежності в FastAPI
 app.dependency_overrides[get_db] = override_get_db
+app.dependency_overrides[get_claims] = override_get_claims
 
 
 @pytest.fixture
 def client() -> TestClient:
-    """
-    Как в профайле: готовый TestClient(app).
-    """
     return TestClient(app)

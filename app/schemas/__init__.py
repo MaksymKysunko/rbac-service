@@ -1,2 +1,2 @@
 # app/schemas/__init__.py
-from .roles import UserRoleCreate, UserRolesResponse  # noqa: F401
+from .roles import RoleChangeRequest,UserRolesResponse  # noqa: F401

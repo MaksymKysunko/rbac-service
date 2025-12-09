@@ -7,6 +7,7 @@ Requires-Dist: fastapi
 Requires-Dist: uvicorn[standard]
 Requires-Dist: sqlmodel
 Requires-Dist: pydantic
+Requires-Dist: sqlalchemy
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: httpx; extra == "dev"

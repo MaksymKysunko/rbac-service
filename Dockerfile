@@ -1,7 +1,27 @@
-FROM python:3.11-slim
+# 1. Базовый образ с Python
+FROM python:3.13-slim
+
+# 2. Не писать .pyc и сразу логировать в stdout
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# 3. Рабочая директория в контейнере
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-RUN pip install --no-cache-dir fastapi uvicorn pyjwt pycryptodome pydantic python-multipart pydantic[email] requests cryptography redis sqlalchemy psycopg2-binary passlib[argon2]
+
+# 4. Устанавливаем зависимости
+# Если у тебя есть requirements.txt — можно поставить так:
+# COPY requirements.txt .
+# RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Если зависимостей немного, можно пока в лоб:
+RUN pip install --upgrade pip \
+    && pip install fastapi uvicorn[standard] sqlalchemy pydantic
+
+# 5. Копируем код сервиса внутрь контейнера
 COPY app ./app
+
+# 6. Открываем порт (для читаемости, не обязательно)
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host","0.0.0.0", "--port","8000"]
+
+# 7. Команда запуска FastAPI через uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
