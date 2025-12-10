@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Role, UserRole
-from app.schemas import RoleChangeRequest, UserRolesResponse
+from app.schemas.roles import RoleChangeRequest, UserRolesResponse
 from app.services import get_claims, get_principal, require_role
 
 router = APIRouter()
@@ -24,7 +24,7 @@ def _get_role_by_name(db: Session, name: str) -> Role:
 def init_user_role(
     user_id: int,
     db: Session = Depends(get_db),
-    claims: dict = Depends(get_claims),
+    #claims: dict = Depends(get_claims),
 ):
     """
     Ініціалізація ролі при створенні користувача.
@@ -85,7 +85,7 @@ def change_user_role(
 def get_user_roles(
     user_id: int,
     db: Session = Depends(get_db),
-    claims: dict = Depends(get_claims),
+    #claims: dict = Depends(get_claims),
 ) -> UserRolesResponse:
     """
     Повертає поточну роль користувача (як список з 0/1 елементом).

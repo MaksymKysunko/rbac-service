@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import Header, Depends, HTTPException
 
 from app.db import SessionLocal
-from app.core.config import (ALG, JWKS_URL, RBAC_AUDIENCE, IDP_ISS)
+from app.core.config import (ALG, JWKS_URL, BACKEND_AUDIENCE, IDP_ISS)
 import logging
 
 
@@ -104,14 +104,14 @@ def verify_bearer(auth: Optional[str]) -> dict:
 
         logging.info(
             "[rbac] verify_bearer: decoding JWT with expected audience=%r",
-            RBAC_AUDIENCE,
+            BACKEND_AUDIENCE,
         )
 
         claims = jwt.decode(
             token,
             pub_pem,
             algorithms=[ALG],
-            audience=RBAC_AUDIENCE,
+            audience=BACKEND_AUDIENCE,
             options={"verify_iss": False},
         )
 
