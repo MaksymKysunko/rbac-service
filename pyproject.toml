@@ -9,6 +9,7 @@ dependencies = [
     "sqlmodel",
     "pydantic",
     "sqlalchemy",
+    "club-shared",
 ]
 
 [project.optional-dependencies]

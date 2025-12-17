@@ -15,7 +15,7 @@ WORKDIR /app
 
 # Если зависимостей немного, можно пока в лоб:
 RUN pip install --upgrade pip \
-    && pip install fastapi uvicorn[standard] sqlalchemy pydantic psycopg2-binary pyjwt cryptography
+    && pip install fastapi uvicorn[standard] sqlalchemy pydantic psycopg2-binary pyjwt cryptography requests
 
 # 5. Копируем код сервиса внутрь контейнера
 COPY app ./app
