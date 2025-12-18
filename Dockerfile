@@ -12,13 +12,16 @@ WORKDIR /app
 # Если у тебя есть requirements.txt — можно поставить так:
 # COPY requirements.txt .
 # RUN pip install --upgrade pip && pip install -r requirements.txt
-
+# 4. Copy and install club-shared package first
+COPY club-shared /tmp/club-shared
 # Если зависимостей немного, можно пока в лоб:
 RUN pip install --upgrade pip \
+    && pip install /tmp/club-shared \
     && pip install fastapi uvicorn[standard] sqlalchemy pydantic psycopg2-binary pyjwt cryptography requests
 
 # 5. Копируем код сервиса внутрь контейнера
-COPY app ./app
+# 5. Копируем код сервиса внутрь контейнера
+COPY rbac-service/app ./app
 
 # 6. Открываем порт (для читаемости, не обязательно)
 EXPOSE 8000
