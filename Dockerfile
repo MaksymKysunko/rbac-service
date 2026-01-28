@@ -17,7 +17,7 @@ COPY club-shared /tmp/club-shared
 # Если зависимостей немного, можно пока в лоб:
 RUN pip install --upgrade pip \
     && pip install /tmp/club-shared \
-    && pip install fastapi uvicorn[standard] sqlalchemy pydantic psycopg2-binary pyjwt cryptography requests
+    && pip install fastapi uvicorn[standard] sqlalchemy pydantic psycopg2-binary pyjwt cryptography requests prometheus-client
 
 # 5. Копируем код сервиса внутрь контейнера
 # 5. Копируем код сервиса внутрь контейнера

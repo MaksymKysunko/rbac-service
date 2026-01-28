@@ -1,6 +1,7 @@
 # app/main.py
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from club_shared import install_monitoring
 
 from app.db import init_db
 from app.api.v1.users import router as users_router
@@ -16,6 +17,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="RBAC Service", lifespan=lifespan)
+install_monitoring(app, "rbac-service")
 
 app.include_router(
     users_router,
