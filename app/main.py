@@ -1,7 +1,9 @@
 # app/main.py
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from club_shared import install_monitoring
+from club_shared import install_monitoring, setup_logging
+
+setup_logging("rbac-service")
 
 from app.db import init_db
 from app.api.v1.users import router as users_router
