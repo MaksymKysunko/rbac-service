@@ -33,3 +33,7 @@ app.include_router(
     prefix="/api/rbac/internal",
     tags=["rbac-internal"],
 )
+
+@app.get("/api/healthz", tags=["health"])
+async def health_check():
+    return {"status": "ok", "service": "rbac-service"}
