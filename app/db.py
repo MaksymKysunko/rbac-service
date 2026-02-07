@@ -25,7 +25,7 @@ def init_db() -> None:
       1) створюємо таблиці
       2) додаємо дефолтні ролі, якщо їх немає
     """
-    from app.models.role import Role, UserRole  # noqa: F401
+    from app.domains.roles.models import Role, UserRole  # noqa: F401
     from app.initial_data import create_default_roles
 
     Base.metadata.create_all(bind=engine)

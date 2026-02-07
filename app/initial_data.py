@@ -1,7 +1,7 @@
 # app/initial_data.py
 from sqlalchemy.orm import Session
 
-from app.models.role import Role
+from app.domains.roles.models import Role
 
 # Набір ролей "із коробки"
 DEFAULT_ROLES = [
