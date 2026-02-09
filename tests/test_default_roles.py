@@ -1,6 +1,6 @@
 # tests/test_default_roles.py
 from app.db import SessionLocal, init_db
-from app.models import Role
+from app.domains.roles.models import Role
 
 
 def test_default_roles_created_on_init_db():

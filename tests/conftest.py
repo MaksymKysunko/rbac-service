@@ -13,8 +13,8 @@ os.environ["DB_URL"] = f"sqlite:///{TEST_DB_PATH}"
 
 from app.db import Base, engine, SessionLocal, get_db, init_db  # noqa: E402
 from app.main import app                                       # noqa: E402
-from app import models                                         # noqa: F401,E402  # щоб Role/UserRole зареєструвались
-from app.services import get_claims                            # noqa: E402
+from app.domains.roles.models import Role, UserRole            # noqa: F401,E402
+from app.auth import get_claims                                # noqa: E402
 
 
 def _reset_database():
