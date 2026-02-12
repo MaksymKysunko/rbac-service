@@ -1,7 +1,12 @@
 # app/main.py
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from club_shared import install_monitoring, setup_logging
+from fastapi_microkit import (
+    setup_logging, 
+    install_monitoring, 
+    install_contract_exceptions, 
+    TraceIdMiddleware
+)
 
 setup_logging("rbac-service")
 
@@ -20,7 +25,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="RBAC Service", lifespan=lifespan)
+
+# 1. Standardized Infrastructure
+app.add_middleware(TraceIdMiddleware)
 install_monitoring(app, "rbac-service")
+install_contract_exceptions(app)
 
 app.include_router(
     users_router,

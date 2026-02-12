@@ -9,7 +9,7 @@ dependencies = [
     "sqlmodel",
     "pydantic",
     "sqlalchemy",
-    "club-shared",
+    "fastapi-microkit",
 ]
 
 [project.optional-dependencies]

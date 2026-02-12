@@ -12,11 +12,11 @@ WORKDIR /app
 # Если у тебя есть requirements.txt — можно поставить так:
 # COPY requirements.txt .
 # RUN pip install --upgrade pip && pip install -r requirements.txt
-# 4. Copy and install club-shared package first
-COPY club-shared /tmp/club-shared
+# 4. Copy and install microkit-python package first
+COPY microkit-python /tmp/microkit-python
 # Если зависимостей немного, можно пока в лоб:
 RUN pip install --upgrade pip \
-    && pip install /tmp/club-shared \
+    && pip install /tmp/microkit-python \
     && pip install fastapi uvicorn[standard] sqlalchemy pydantic psycopg2-binary pyjwt cryptography requests prometheus-client
 
 # 5. Копируем код сервиса внутрь контейнера
