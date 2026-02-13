@@ -1,61 +1,71 @@
 import os
-import pathlib
-
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+from fastapi import HTTPException, Request
+
+# 1. Set Environment BEFORE any app imports
+os.environ["DB_URL"] = "sqlite:///:memory:"
+
+# 2. Mock require_role factor BEFORE app imports it to have stable function objects for overrides
+import app.domains.roles.service
+_role_checkers = {}
+
+def require_role_patched(role: str):
+    if role not in _role_checkers:
+        def role_checker(request: Request):
+            # Mock original logic: check request.state.principal
+            raise HTTPException(status_code=401, detail="Authentication required")
+        _role_checkers[role] = role_checker
+    return _role_checkers[role]
+
+app.domains.roles.service.require_role = require_role_patched
+
+# Now import the app
+import app.db
+from app.db import Base, init_db
 from fastapi.testclient import TestClient
+from app.main import app as fastapi_app
 
-# Шлях до тестової БД (файлова SQLite)
-BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
-TEST_DB_PATH = BASE_DIR / "test_rbac.db"
+# 3. Configure the shared in-memory engine correctly
+test_engine = create_engine(
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+TestingSessionLocal = sessionmaker(bind=test_engine, expire_on_commit=False, future=True)
 
-# Підміняємо DB_URL ДО імпорту app.db / app.main
-os.environ["DB_URL"] = f"sqlite:///{TEST_DB_PATH}"
+# Monkeypatch the app's DB components
+app.db.engine = test_engine
+app.db.SessionLocal = TestingSessionLocal
 
-from app.db import Base, engine, SessionLocal, get_db, init_db  # noqa: E402
-from app.main import app                                       # noqa: E402
-from app.domains.roles.models import Role, UserRole            # noqa: F401,E402
-from app.auth import get_claims                                # noqa: E402
-
-
-def _reset_database():
-    """
-    Перед кожним тестом:
-      1) дропаєм усі таблиці
-      2) викликаємо init_db(), який і створює схему, і сідає дефолтні ролі
-    """
-    Base.metadata.drop_all(bind=engine)
+@pytest.fixture(scope="session", autouse=True)
+def setup_db():
     init_db()
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    _reset_database()
     yield
 
-
-def override_get_db():
-    db = SessionLocal()
+@pytest.fixture()
+def db_session():
+    session = TestingSessionLocal()
     try:
-        yield db
+        yield session
     finally:
-        db.close()
-
-
-def override_get_claims():
-    """
-    У тестах не ганяємо реальний JWT/JWKS.
-    Просто вважаємо, що до нас прийшов токен:
-      sub = "1"
-      role = "boss"
-    """
-    return {"sub": "1", "role": "boss"}
-
-
-# Підміняємо залежності в FastAPI
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_claims] = override_get_claims
-
+        session.close()
 
 @pytest.fixture
-def client() -> TestClient:
-    return TestClient(app)
+def client():
+    fastapi_app.dependency_overrides.clear()
+    return TestClient(fastapi_app)
+
+@pytest.fixture
+def boss_client(client):
+    # Use the stable checker from our patched factory
+    checker = app.domains.roles.service.require_role("boss")
+    
+    def mock_require_boss(request: Request):
+        return {"user_id": 2, "username": "boss", "role": "boss"}
+    
+    fastapi_app.dependency_overrides[checker] = mock_require_boss
+    client.headers["Authorization"] = "Bearer boss"
+    return client
