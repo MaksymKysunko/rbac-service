@@ -25,10 +25,26 @@ RUN pip install --no-cache-dir \
     pyjwt \
     cryptography \
     requests \
-    prometheus-client
+    prometheus-client \
+    pytest \
+    pytest-asyncio \
+    requests-mock \
+    pytest-mock
 
-# Stage 2: Final
+# Stage 2: Tester
+FROM builder AS tester
+WORKDIR /app
+COPY rbac-service/app ./app
+COPY rbac-service/tests ./tests
+RUN python -m pytest tests && touch .tests-passed
+
+# Stage 3: Final
 FROM python:3.12-slim
+
+WORKDIR /app
+
+# Ensure tests passed before proceeding to final image
+COPY --from=tester /app/.tests-passed ./.tests-passed
 
 WORKDIR /app
 
