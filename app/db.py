@@ -26,6 +26,7 @@ def init_db() -> None:
       2) додаємо дефолтні ролі, якщо їх немає
     """
     from app.domains.roles.models import Role, UserRole  # noqa: F401
+    from app.domains.punishments.models import Punishment  # noqa: F401
     from app.initial_data import create_default_roles
 
     Base.metadata.create_all(bind=engine)

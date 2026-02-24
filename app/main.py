@@ -19,6 +19,12 @@ from app.api.v1.internal import router as internal_router
 async def lifespan(app: FastAPI):
     # аналог startup()
     init_db()
+    try:
+        from app.migrations import migrate_punishments_table
+        migrate_punishments_table()
+    except Exception as e:
+        import logging
+        logging.error(f"Migration failed: {e}")
     yield
     # аналог shutdown()
     # (пока ничего не нужно)

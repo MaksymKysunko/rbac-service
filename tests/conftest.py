@@ -8,8 +8,8 @@ from fastapi import HTTPException, Request
 # 1. Set Environment BEFORE any app imports
 os.environ["DB_URL"] = "sqlite:///:memory:"
 
-# 2. Mock require_role factor BEFORE app imports it to have stable function objects for overrides
-import app.domains.roles.service
+# 2. Mock require_role factor BEFORE app imports it
+import app.auth
 _role_checkers = {}
 
 def require_role_patched(role: str):
@@ -20,7 +20,7 @@ def require_role_patched(role: str):
         _role_checkers[role] = role_checker
     return _role_checkers[role]
 
-app.domains.roles.service.require_role = require_role_patched
+app.auth.require_role = require_role_patched
 
 # Now import the app
 import app.db
@@ -61,10 +61,10 @@ def client():
 @pytest.fixture
 def boss_client(client):
     # Use the stable checker from our patched factory
-    checker = app.domains.roles.service.require_role("boss")
+    checker = app.auth.require_role("boss")
     
     def mock_require_boss(request: Request):
-        return {"user_id": 2, "username": "boss", "role": "boss"}
+        return {"sub": "2", "user_id": 2, "username": "boss", "role": "boss"}
     
     fastapi_app.dependency_overrides[checker] = mock_require_boss
     client.headers["Authorization"] = "Bearer boss"
