@@ -85,9 +85,9 @@ class PunishmentsService:
                 continue
             
             if p.context == "chat":
-                limits["chatlimited"] = p.expires_at.isoformat() if p.expires_at else "permanent"
+                limits["chatlimited"] = p.expires_at.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z") if p.expires_at else "permanent"
             elif p.context == "full":
-                limits["accountblocked"] = p.expires_at.isoformat() if p.expires_at else "permanent"
+                limits["accountblocked"] = p.expires_at.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z") if p.expires_at else "permanent"
         
         return limits
 

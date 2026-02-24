@@ -3,9 +3,9 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class PunishmentCreate(BaseModel):
-    user_id: int
-    action: str  # 'ban', 'block'
-    context: str # 'chat', 'full'
+    user_id: Optional[int] = None
+    action: Optional[str] = None  # 'ban', 'block'
+    context: Optional[str] = None # 'chat', 'full'
     reason: Optional[str] = None
     duration_hours: Optional[int] = None # None means permanent
 

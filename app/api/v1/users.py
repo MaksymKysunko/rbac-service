@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+import logging
 from typing import List
 
 from app.db import get_db
 from app.domains.roles.schemas import RoleChangeRequest, UserRolesResponse
 from app.domains.roles.service import RolesService
-from app.auth import require_role
 from app.domains.punishments.service import PunishmentsService
 from app.domains.punishments.schemas import (
     PunishmentCreate, 
@@ -13,6 +13,8 @@ from app.domains.punishments.schemas import (
     AmnestyRequest,
     UserPermissionsResponse
 )
+from .internal import require_internal
+from fastapi import Header
 
 router = APIRouter()
 
@@ -21,6 +23,7 @@ router = APIRouter()
 def init_user_role(
     user_id: int,
     db: Session = Depends(get_db),
+    _ = Depends(require_internal),
 ):
     """
     Ініціалізація ролі при створенні користувача.
@@ -35,12 +38,13 @@ def change_user_role(
     user_id: int,
     body: RoleChangeRequest,
     db: Session = Depends(get_db),
-    claims: dict = Depends(require_role("boss")),
+    _ = Depends(require_internal),
 ):
     """
     Зміна ролі користувача (Boss only).
     """
     srv = RolesService(db)
+    logging.info("[rbac] Changing user_id=%d role to %s (executor_id: unknown - internal call)", user_id, body.role)
     roles = srv.change_user_role(user_id, body.role)
     return UserRolesResponse(user_id=user_id, roles=roles)
 
@@ -49,6 +53,7 @@ def change_user_role(
 def get_user_roles(
     user_id: int,
     db: Session = Depends(get_db),
+    _ = Depends(require_internal),
 ) -> UserRolesResponse:
     """
     Повертає поточну роль користувача.
@@ -62,6 +67,7 @@ def get_user_roles(
 def get_user_permissions(
     user_id: int,
     db: Session = Depends(get_db),
+    _ = Depends(require_internal),
 ):
     """
     Combined roles and active punishments.
@@ -80,7 +86,7 @@ def get_user_permissions(
 def get_moderation_history(
     user_id: int,
     db: Session = Depends(get_db),
-    claims: dict = Depends(require_role("boss")),
+    _ = Depends(require_internal),
 ):
     """
     Full history for the Boss UI.
@@ -94,7 +100,8 @@ def issue_chat_ban(
     user_id: int,
     body: PunishmentCreate,
     db: Session = Depends(get_db),
-    claims: dict = Depends(require_role("boss")),
+    _ = Depends(require_internal),
+    x_executor_id: int = Header(..., alias="X-Executor-ID"),
 ):
     """
     Issue a chat-specific ban.
@@ -104,7 +111,9 @@ def issue_chat_ban(
     body.user_id = user_id
     body.context = "chat"
     body.action = "ban"
-    return srv.add_punishment(body, boss_id=int(claims["sub"]))
+    logging.info("[rbac] Issuing chat ban for user_id=%d (executor_id=%s, duration=%s, reason=%s)", 
+                 user_id, x_executor_id, body.duration_hours, body.reason)
+    return srv.add_punishment(body, boss_id=x_executor_id)
 
 
 @router.post("/amnesty/{punishment_id}")
@@ -112,13 +121,16 @@ def grant_amnesty(
     punishment_id: int,
     body: AmnestyRequest,
     db: Session = Depends(get_db),
-    claims: dict = Depends(require_role("boss")),
+    _ = Depends(require_internal),
+    x_executor_id: int = Header(..., alias="X-Executor-ID"),
 ):
     """
     Clear a specific violation.
     """
     srv = PunishmentsService(db)
-    success = srv.grant_amnesty(punishment_id, boss_id=int(claims["sub"]), reason=body.reason)
+    logging.info("[rbac] Granting amnesty for punishment_id=%d (executor_id=%s, reason=%s)", 
+                 punishment_id, x_executor_id, body.reason)
+    success = srv.grant_amnesty(punishment_id, boss_id=x_executor_id, reason=body.reason)
     if not success:
         raise HTTPException(status_code=404, detail="Punishment not found")
     return {"status": "ok"}

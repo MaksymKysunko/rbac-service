@@ -8,19 +8,19 @@ from fastapi import HTTPException, Request
 # 1. Set Environment BEFORE any app imports
 os.environ["DB_URL"] = "sqlite:///:memory:"
 
-# 2. Mock require_role factor BEFORE app imports it
-import app.auth
-_role_checkers = {}
+# 2. Mock require_internal BEFORE app imports it
+import app.api.v1.internal
+from fastapi import Header, HTTPException
 
-def require_role_patched(role: str):
-    if role not in _role_checkers:
-        def role_checker(request: Request):
-            # Mock original logic: check request.state.principal
-            raise HTTPException(status_code=401, detail="Authentication required")
-        _role_checkers[role] = role_checker
-    return _role_checkers[role]
+def mock_require_internal(x_api_key: str = Header(default="")):
+    from app.core.config import INTERNAL_API_KEY
+    if x_api_key != INTERNAL_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid internal api key")
+    return None
 
-app.auth.require_role = require_role_patched
+app.api.v1.internal.require_internal = mock_require_internal
+
+# require_role no longer used in endpoints
 
 # Now import the app
 import app.db
@@ -60,12 +60,6 @@ def client():
 
 @pytest.fixture
 def boss_client(client):
-    # Use the stable checker from our patched factory
-    checker = app.auth.require_role("boss")
-    
-    def mock_require_boss(request: Request):
-        return {"sub": "2", "user_id": 2, "username": "boss", "role": "boss"}
-    
-    fastapi_app.dependency_overrides[checker] = mock_require_boss
-    client.headers["Authorization"] = "Bearer boss"
+    client.headers["X-API-Key"] = "change-me"
+    client.headers["X-Executor-ID"] = "2"
     return client

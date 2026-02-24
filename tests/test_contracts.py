@@ -8,7 +8,8 @@ def test_healthz(client):
 
 def test_init_user_role(client):
     user_id = 101
-    response = client.post(f"/api/rbac/users/{user_id}/role/init")
+    headers = {"X-API-Key": INTERNAL_API_KEY}
+    response = client.post(f"/api/rbac/users/{user_id}/role/init", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == user_id
@@ -16,10 +17,11 @@ def test_init_user_role(client):
 
 def test_get_user_roles(client):
     user_id = 102
+    headers = {"X-API-Key": INTERNAL_API_KEY}
     # Init first
-    client.post(f"/api/rbac/users/{user_id}/role/init")
+    client.post(f"/api/rbac/users/{user_id}/role/init", headers=headers)
     
-    response = client.get(f"/api/rbac/users/{user_id}/roles")
+    response = client.get(f"/api/rbac/users/{user_id}/roles", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == user_id
