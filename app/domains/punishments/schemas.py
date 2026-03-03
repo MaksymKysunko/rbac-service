@@ -30,3 +30,4 @@ class UserPermissionsResponse(BaseModel):
     user_id: int
     roles: List[str]
     limits: dict # e.g. {"chatlimited": "2026-02-24T18:00:00Z"}
+    scopes: List[str]  # e.g. ["use_chat", "create_deal"]

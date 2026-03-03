@@ -27,12 +27,13 @@ def init_db() -> None:
     """
     from app.domains.roles.models import Role, UserRole  # noqa: F401
     from app.domains.punishments.models import Punishment  # noqa: F401
-    from app.initial_data import create_default_roles
+    from app.initial_data import create_default_roles, create_default_settings
 
     Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
     try:
         create_default_roles(db)
+        create_default_settings(db)
     finally:
         db.close()

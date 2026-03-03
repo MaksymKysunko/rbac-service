@@ -28,3 +28,26 @@ def get_boss_id(
     srv = RolesService(db)
     boss_user_id = srv.get_first_user_with_role("boss")
     return BossResponse(user_id=boss_user_id)
+
+
+@router.get("/settings/{key}")
+def get_setting(
+    key: str,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_internal),
+):
+    srv = RolesService(db)
+    val = srv.get_setting(key)
+    return {"key": key, "value": val}
+
+
+@router.post("/settings/{key}")
+def set_setting(
+    key: str,
+    body: dict, # {"value": "..."}
+    db: Session = Depends(get_db),
+    _: None = Depends(require_internal),
+):
+    srv = RolesService(db)
+    srv.set_setting(key, str(body.get("value")).lower())
+    return {"status": "ok"}

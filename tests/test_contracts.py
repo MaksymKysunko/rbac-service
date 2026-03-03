@@ -13,7 +13,7 @@ def test_init_user_role(client):
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == user_id
-    assert "soldier" in data["roles"]
+    assert "guest" in data["roles"]
 
 def test_get_user_roles(client):
     user_id = 102
@@ -25,7 +25,7 @@ def test_get_user_roles(client):
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == user_id
-    assert "soldier" in data["roles"]
+    assert "guest" in data["roles"]
 
 def test_change_user_role_boss(boss_client):
     user_id = 103

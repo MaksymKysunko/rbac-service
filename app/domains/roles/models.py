@@ -32,3 +32,14 @@ class UserRole(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     role = relationship("Role", back_populates="user_roles")
+
+
+class Setting(Base):
+    __tablename__ = "settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(64), unique=True, nullable=False, index=True)
+    value = Column(String(255), nullable=False)
+    type = Column(String(16), nullable=False, default="bool") # bool|int|str
+    description = Column(String(255), nullable=True)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

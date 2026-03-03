@@ -17,16 +17,16 @@ class RolesService:
         return role
 
     def init_user_role(self, user_id: int) -> List[str]:
-        """Initialize role for a new user, default is 'soldier'."""
-        soldier_role = self.get_role_by_name("soldier")
+        """Initialize role for a new user, default is 'guest'."""
+        guest_role = self.get_role_by_name("guest")
 
         mapping = self.db.query(UserRole).filter(UserRole.user_id == user_id).first()
         if mapping is None:
-            mapping = UserRole(user_id=user_id, role_id=soldier_role.id)
+            mapping = UserRole(user_id=user_id, role_id=guest_role.id)
             self.db.add(mapping)
             self.db.commit()
             self.db.refresh(mapping)
-            return ["soldier"]
+            return ["guest"]
         else:
             # if already has role, return current roles
             return self.get_user_role_names(user_id)
@@ -73,6 +73,23 @@ class RolesService:
             )
 
         return mapping.user_id
+
+    def get_setting(self, key: str, default: str = None) -> str:
+        from .models import Setting
+        setting = self.db.query(Setting).filter(Setting.key == key).first()
+        if setting:
+            return setting.value
+        return default
+
+    def set_setting(self, key: str, value: str, stype: str = "bool") -> None:
+        from .models import Setting
+        setting = self.db.query(Setting).filter(Setting.key == key).first()
+        if setting:
+            setting.value = value
+        else:
+            setting = Setting(key=key, value=value, type=stype)
+            self.db.add(setting)
+        self.db.commit()
 
 def require_role(role: str):
     """Dependency factory for checking user role from request state (Principal)."""

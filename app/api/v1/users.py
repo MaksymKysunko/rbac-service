@@ -66,19 +66,60 @@ def get_user_roles(
 @router.get("/{user_id}/permissions", response_model=UserPermissionsResponse)
 def get_user_permissions(
     user_id: int,
+    is_verified: bool = True,
     db: Session = Depends(get_db),
     _ = Depends(require_internal),
 ):
     """
-    Combined roles and active punishments.
+    Combined roles, active punishments, and scopes based on verification.
     """
     roles_srv = RolesService(db)
     punish_srv = PunishmentsService(db)
     
+    roles = roles_srv.get_user_role_names(user_id)
+    if not roles:
+        # Fallback to guest if no roles found (e.g. legacy users)
+        roles = ["guest"]
+        
+    limits = punish_srv.get_active_limits(user_id)
+    
+    # Scope assignment logic
+    scopes = []
+    if "boss" in roles:
+        scopes = ["all"]
+    elif "soldier" in roles:
+        # Soldier is already verified (promoted during verification step in IDP)
+        scopes = [
+            "local_cabinet", 
+            "use_chat", 
+            "use_deals", 
+            "create_topic", 
+            "create_deal", 
+            "create_deposit", 
+            "create_withdrawl"
+        ]
+    elif "guest" in roles:
+        block_unverified = roles_srv.get_setting("blockUnverifiedUsers", "true") == "true"
+        if block_unverified:
+            scopes = ["limited_access"]
+        else:
+            # Elevation: Guest gets soldier scopes AND role if blocking is disabled
+            roles = ["soldier"]
+            scopes = [
+                "local_cabinet", 
+                "use_chat", 
+                "use_deals", 
+                "create_topic", 
+                "create_deal", 
+                "create_deposit", 
+                "create_withdrawl"
+            ]
+            
     return UserPermissionsResponse(
         user_id=user_id,
-        roles=roles_srv.get_user_role_names(user_id),
-        limits=punish_srv.get_active_limits(user_id)
+        roles=roles,
+        limits=limits,
+        scopes=scopes
     )
 
 

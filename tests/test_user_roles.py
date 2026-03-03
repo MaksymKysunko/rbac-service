@@ -7,13 +7,13 @@ def test_init_and_get_roles(client: TestClient):
     user_id = 123
 
     headers = {"X-API-Key": INTERNAL_API_KEY}
-    # 1. Ініціалізуємо роль користувача (має стати 'soldier')
+    # 1. Ініціалізуємо роль користувача (має стати 'guest')
     resp_init = client.post(f"/api/rbac/users/{user_id}/role/init", headers=headers)
     assert resp_init.status_code == 200
 
     data_init = resp_init.json()
     assert data_init["user_id"] == user_id
-    assert data_init["roles"] == ["soldier"]
+    assert data_init["roles"] == ["guest"]
 
     # 2. Перевіряємо через GET, що роль зчитується коректно
     resp_get = client.get(f"/api/rbac/users/{user_id}/roles", headers=headers)
@@ -21,4 +21,4 @@ def test_init_and_get_roles(client: TestClient):
 
     data_get = resp_get.json()
     assert data_get["user_id"] == user_id
-    assert data_get["roles"] == ["soldier"]
+    assert data_get["roles"] == ["guest"]
