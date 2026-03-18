@@ -51,3 +51,5 @@ def set_setting(
     srv = RolesService(db)
     srv.set_setting(key, str(body.get("value")).lower())
     return {"status": "ok"}
+
+

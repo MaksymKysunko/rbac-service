@@ -175,3 +175,6 @@ def grant_amnesty(
     if not success:
         raise HTTPException(status_code=404, detail="Punishment not found")
     return {"status": "ok"}
+
+
+
