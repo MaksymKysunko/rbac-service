@@ -32,17 +32,16 @@ class RolesService:
             return self.get_user_role_names(user_id)
 
     def change_user_role(self, user_id: int, new_role_name: str) -> List[str]:
-        """Change user's role. Requires previous initialization."""
+        """Change user's role. Support creating role if not exists."""
         target_role = self.get_role_by_name(new_role_name)
-
-        existing = self.db.query(UserRole).filter(UserRole.user_id == user_id).first()
-        if existing is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User has no role yet, init role first",
-            )
-
-        existing.role_id = target_role.id
+        
+        mapping = self.db.query(UserRole).filter(UserRole.user_id == user_id).first()
+        if mapping:
+            mapping.role_id = target_role.id
+        else:
+            mapping = UserRole(user_id=user_id, role_id=target_role.id)
+            self.db.add(mapping)
+            
         self.db.commit()
         return [new_role_name]
 
