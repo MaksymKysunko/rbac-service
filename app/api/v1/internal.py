@@ -30,6 +30,20 @@ def get_boss_id(
     return BossResponse(user_id=boss_user_id)
 
 
+@router.get("/roles/{role_name}/users")
+def get_users_by_role(
+    role_name: str,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_internal),
+):
+    """
+    Returns the list of user_ids for a specific role.
+    """
+    srv = RolesService(db)
+    user_ids = srv.get_all_users_with_role(role_name)
+    return {"role": role_name, "user_ids": user_ids}
+
+
 @router.get("/settings/{key}")
 def get_setting(
     key: str,

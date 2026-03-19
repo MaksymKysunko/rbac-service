@@ -55,23 +55,30 @@ class RolesService:
         )
         return [r[0] for r in roles]
 
-    def get_first_user_with_role(self, role_name: str) -> int:
-        """Find the first user_id with the given role name."""
+    def get_all_users_with_role(self, role_name: str) -> List[int]:
+        """Find all user_ids with the given role name."""
         role = self.db.query(Role).filter(Role.name == role_name).first()
         if not role:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Role '{role_name}' not defined in system",
-            )
+            return []
+        
+        mappings = self.db.query(UserRole).filter(UserRole.role_id == role.id).all()
+        return [m.user_id for m in mappings]
 
-        mapping = self.db.query(UserRole).filter(UserRole.role_id == role.id).first()
-        if not mapping:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No user found with role '{role_name}'",
-            )
+    def get_first_user_with_role(self, role_name: str) -> int:
+        """Find the first user_id with the given role name."""
+        ids = self.get_all_users_with_role(role_name)
+        if not ids:
+            return 1
+        return ids[0]
 
-        return mapping.user_id
+    def get_role_by_name(self, name: str) -> Role:
+        role = self.db.query(Role).filter(Role.name == name).first()
+        if role is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown role: {name}",
+            )
+        return role
 
     def get_setting(self, key: str, default: str = None) -> str:
         from .models import Setting
