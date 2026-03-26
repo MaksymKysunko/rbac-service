@@ -54,7 +54,7 @@ class PunishmentsService:
             created_by=boss_id
         )
         self.db.add(punishment)
-        self.db.commit()
+        self.db.flush()
         self.db.refresh(punishment)
         return punishment
 
@@ -81,7 +81,7 @@ class PunishmentsService:
             # Check if expired naturally
             if p.expires_at and p.expires_at.replace(tzinfo=timezone.utc) < now:
                 p.status = "expired"
-                self.db.commit()
+                self.db.flush()
                 continue
             
             if p.context == "chat":
@@ -100,5 +100,5 @@ class PunishmentsService:
         p.amnestied_by = boss_id
         p.amnestied_at = datetime.now(timezone.utc)
         p.amnesty_reason = reason
-        self.db.commit()
+        self.db.flush()
         return True

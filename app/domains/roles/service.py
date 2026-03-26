@@ -24,7 +24,7 @@ class RolesService:
         if mapping is None:
             mapping = UserRole(user_id=user_id, role_id=guest_role.id)
             self.db.add(mapping)
-            self.db.commit()
+            self.db.flush()
             self.db.refresh(mapping)
             return ["guest"]
         else:
@@ -42,7 +42,7 @@ class RolesService:
             mapping = UserRole(user_id=user_id, role_id=target_role.id)
             self.db.add(mapping)
             
-        self.db.commit()
+        self.db.flush()
         return [new_role_name]
 
     def get_user_role_names(self, user_id: int) -> List[str]:
@@ -95,7 +95,7 @@ class RolesService:
         else:
             setting = Setting(key=key, value=value, type=stype)
             self.db.add(setting)
-        self.db.commit()
+        self.db.flush()
 
 def require_role(role: str):
     """Dependency factory for checking user role from request state (Principal)."""
